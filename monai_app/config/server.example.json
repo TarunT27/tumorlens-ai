@@ -1,0 +1,7 @@
+{
+  "serverUrl": "http://127.0.0.1:8000",
+  "defaultModel": "deepedit",
+  "studiesPath": "datasets/Task01_BrainTumour/imagesTr",
+  "purpose": "research-and-education-demo"
+}
+

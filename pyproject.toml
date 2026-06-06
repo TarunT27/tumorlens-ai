@@ -1,0 +1,14 @@
+[project]
+name = "tumorlens-ai"
+version = "0.1.0"
+description = "3D Slicer extension scaffold for AI-assisted brain tumor MRI segmentation and quantitative analysis."
+requires-python = ">=3.10"
+readme = "README.md"
+license = "MIT"
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

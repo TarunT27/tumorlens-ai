@@ -1,0 +1,2 @@
+monailabel
+huggingface_hub[hf_xet]>=1.17.0

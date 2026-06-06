@@ -1,0 +1,3 @@
+# TumorLens AI pure-Python tests currently use only the Python standard library.
+# Keep this file so setup scripts have a stable install hook as tooling grows.
+
