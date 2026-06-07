@@ -98,9 +98,12 @@ Example server startup:
 ```bash
 powershell -ExecutionPolicy Bypass -File scripts/setup_monai.ps1
 powershell -ExecutionPolicy Bypass -File scripts/download_monai_radiology_app.ps1
+powershell -ExecutionPolicy Bypass -File scripts/download_monai_brats_bundle.ps1
 powershell -ExecutionPolicy Bypass -File scripts/create_synthetic_study.ps1
-powershell -ExecutionPolicy Bypass -File scripts/start_monai_server.ps1 -StudiesPath sample_data/synthetic_brain_mri/imagesTr
+powershell -ExecutionPolicy Bypass -File scripts/start_monai_server.ps1 -StudiesPath sample_data/synthetic_brain_mri/imagesTr -UseBrainTumorBundle
 ```
+
+The `-UseBrainTumorBundle` flag stages the downloaded `MONAI/brats_mri_segmentation` bundle into the local MONAI Label radiology app and exposes the `brats_mri_segmentation` model through `/info`.
 
 See `monai_app/README.md` for more setup notes.
 

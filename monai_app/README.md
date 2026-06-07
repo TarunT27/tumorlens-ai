@@ -21,7 +21,7 @@ datasets/Task01_BrainTumour/imagesTr
 Start the server:
 
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/start_monai_server.ps1 -StudiesPath datasets/Task01_BrainTumour/imagesTr
+powershell -ExecutionPolicy Bypass -File scripts/start_monai_server.ps1 -StudiesPath datasets/Task01_BrainTumour/imagesTr -UseBrainTumorBundle
 ```
 
 By default, MONAI Label serves at:
@@ -39,6 +39,14 @@ monai_app/bundles/brats_mri_segmentation
 ```
 
 This bundle is a 3D BraTS MRI segmentation model for aligned T1c, T1, T2, and FLAIR volumes. It outputs tumor core, whole tumor, and enhancing tumor channels. Downloaded bundle files are ignored by Git; rerun `scripts/download_monai_brats_bundle.ps1` to refresh or reinstall them.
+
+`scripts/start_monai_server.ps1 -UseBrainTumorBundle` registers this local bundle under the MONAI Label radiology app's ignored `model/` directory, then starts the server with:
+
+```text
+--conf models deepedit --conf bundles brats_mri_segmentation
+```
+
+Use the synthetic study for server/connectivity checks only. Meaningful BraTS inference requires a compatible public BraTS-style study where each image provides the expected four MRI channels: T1c, T1, T2, and FLAIR.
 
 ## Notes
 

@@ -103,7 +103,7 @@ class TumorLensAIWidget(ScriptedLoadableModuleWidget):
         workflowLayout.addLayout(self._formRow("Server", serverRow))
 
         self.modelSelector = qt.QComboBox()
-        self.modelSelector.addItems(["deepedit", "segresnet", "brats_mri_segmentation"])
+        self.modelSelector.addItems(["brats_mri_segmentation", "deepedit", "segresnet"])
         workflowLayout.addLayout(self._formRow("Model", self.modelSelector))
 
         self.simulateCheckBox = qt.QCheckBox("Use simulated segmentation when MONAI is unavailable")

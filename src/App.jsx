@@ -20,7 +20,7 @@ import {
 const steps = [
   { id: "load", label: "Load Scan", detail: "BraTS MRI volume" },
   { id: "connect", label: "Connect MONAI", detail: "Label server" },
-  { id: "segment", label: "Run AI Segmentation", detail: "deepedit inference" },
+  { id: "segment", label: "Run AI Segmentation", detail: "BraTS bundle inference" },
   { id: "review", label: "Review 2D/3D", detail: "Slices and surface" },
   { id: "measure", label: "Inspect Measurements", detail: "Tumor analytics" },
   { id: "export", label: "Export Report", detail: "JSON or CSV" },
@@ -37,8 +37,8 @@ const metrics = [
 
 const labelRows = [
   { id: "enhancing", label: "Enhancing tumor", color: "#22d3ee", volume: "14.8 cm^3" },
-  { id: "edema", label: "Peritumoral edema", color: "#60a5fa", volume: "19.6 cm^3" },
-  { id: "necrotic", label: "Necrotic core", color: "#f472b6", volume: "4.0 cm^3" },
+  { id: "whole", label: "Whole tumor", color: "#60a5fa", volume: "19.6 cm^3" },
+  { id: "core", label: "Tumor core", color: "#f472b6", volume: "4.0 cm^3" },
 ];
 
 const surfaceCopy = {
@@ -67,8 +67,8 @@ function App() {
   const [showReport, setShowReport] = useState(false);
   const [labels, setLabels] = useState({
     enhancing: true,
-    edema: true,
-    necrotic: true,
+    whole: true,
+    core: true,
   });
 
   useEffect(() => {
@@ -121,7 +121,7 @@ function App() {
     const payload = {
       studyId: "BraTS_2021_001",
       modality: "MRI T1CE",
-      model: "deepedit / 3D UNet",
+      model: "brats_mri_segmentation / SegResNet",
       tumorVolumeCm3: 38.42,
       voxelCount: 184920,
       surfaceAreaMm2: 4812,
@@ -398,7 +398,8 @@ function ContextPanel({
       <div className="control-grid">
         <div className="control-group">
           <label>Model</label>
-          <select defaultValue="deepedit">
+          <select defaultValue="brats_mri_segmentation">
+            <option value="brats_mri_segmentation">BraTS SegResNet</option>
             <option value="deepedit">deepedit / 3D UNet</option>
             <option value="segresnet">SegResNet brain tumor</option>
           </select>

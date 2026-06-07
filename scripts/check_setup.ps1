@@ -27,18 +27,15 @@ Write-Host "Checking 3D Slicer..."
 powershell -ExecutionPolicy Bypass -File scripts\find_slicer.ps1
 
 Write-Host ""
-Write-Host "Checking MONAI server configuration with synthetic study..."
+Write-Host "Checking MONAI server configuration with synthetic study and BraTS bundle..."
 $SyntheticStudy = "sample_data\synthetic_brain_mri\imagesTr"
 if (-not (Test-Path $SyntheticStudy)) {
     powershell -ExecutionPolicy Bypass -File scripts\create_synthetic_study.ps1
 }
-.monai-venv\Scripts\python.exe -m monailabel.main start_server `
-    --app monai_app\radiology `
-    --studies $SyntheticStudy `
-    --conf models deepedit `
-    --host 127.0.0.1 `
-    --port 8000 `
-    --dryrun
+powershell -ExecutionPolicy Bypass -File scripts\start_monai_server.ps1 `
+    -StudiesPath $SyntheticStudy `
+    -UseBrainTumorBundle `
+    -DryRun
 
 Write-Host ""
 Write-Host "Setup check complete."

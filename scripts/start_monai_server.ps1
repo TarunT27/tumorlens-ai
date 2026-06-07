@@ -1,6 +1,9 @@
 param(
     [string]$StudiesPath = "datasets/Task01_BrainTumour/imagesTr",
     [string]$Model = "deepedit",
+    [string]$Bundles = "",
+    [switch]$UseBrainTumorBundle,
+    [switch]$DryRun,
     [string]$HostAddress = "127.0.0.1",
     [int]$Port = 8000
 )
@@ -24,9 +27,61 @@ if (-not (Test-Path $StudiesPath)) {
     throw "Studies path not found: $StudiesPath. Download a public dataset first, or pass -StudiesPath <path>."
 }
 
-& $MonaiPython -m monailabel.main start_server `
-    --app $AppPath `
-    --studies $StudiesPath `
-    --conf models $Model `
-    --host $HostAddress `
-    --port $Port
+function Register-LocalBundle {
+    param(
+        [string]$BundleName,
+        [string]$SourcePath,
+        [string]$AppPath
+    )
+
+    if (-not (Test-Path $SourcePath)) {
+        throw "Missing MONAI bundle: $SourcePath. Run scripts\download_monai_brats_bundle.ps1 first."
+    }
+
+    $ModelRoot = Join-Path $AppPath "model"
+    $TargetPath = Join-Path $ModelRoot $BundleName
+    New-Item -ItemType Directory -Path $ModelRoot -Force | Out-Null
+
+    if (Test-Path $TargetPath) {
+        return
+    }
+
+    try {
+        New-Item -ItemType Junction -Path $TargetPath -Target (Resolve-Path $SourcePath).Path | Out-Null
+    } catch {
+        Copy-Item -Path $SourcePath -Destination $TargetPath -Recurse
+    }
+}
+
+if ($UseBrainTumorBundle) {
+    $BrainTumorBundleName = "brats_mri_segmentation"
+    Register-LocalBundle `
+        -BundleName $BrainTumorBundleName `
+        -SourcePath "monai_app\bundles\$BrainTumorBundleName" `
+        -AppPath $AppPath
+
+    if ($Bundles) {
+        $Bundles = "$Bundles,$BrainTumorBundleName"
+    } else {
+        $Bundles = $BrainTumorBundleName
+    }
+}
+
+$Arguments = @(
+    "-m", "monailabel.main", "start_server",
+    "--app", $AppPath,
+    "--studies", $StudiesPath,
+    "--conf", "models", $Model,
+    "--host", $HostAddress,
+    "--port", $Port
+)
+
+if ($Bundles) {
+    $Arguments += @("--conf", "bundles", $Bundles)
+}
+
+if ($DryRun) {
+    $Arguments += @("--dryrun")
+}
+
+& $MonaiPython @Arguments

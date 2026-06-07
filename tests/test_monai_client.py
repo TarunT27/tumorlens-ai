@@ -32,6 +32,21 @@ class TumorLensAIMONAIClientTests(unittest.TestCase):
         self.assertFalse(status.reachable)
         self.assertIn("server timeout", status.message)
 
+    def test_status_extracts_models_from_info_when_models_endpoint_missing(self):
+        def transport(method, url, headers, body, timeout):
+            if url.endswith("/info"):
+                return 200, {"models": {"deepedit": {}, "brats_mri_segmentation": {}}}
+            if url.endswith("/models"):
+                return 404, {}
+            return 404, {}
+
+        client = TumorLensAIMONAIClient("http://example.test", transport=transport)
+
+        status = client.check_status()
+
+        self.assertTrue(status.reachable)
+        self.assertEqual(status.models, ["deepedit", "brats_mri_segmentation"])
+
     def test_json_request_sends_encoded_payload(self):
         captured = {}
 
@@ -49,4 +64,3 @@ class TumorLensAIMONAIClientTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -37,3 +37,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ""
 Write-Host "MONAI BraTS bundle installed at:"
 Write-Host "  $ResolvedOutput"
+Write-Host ""
+Write-Host "Start MONAI Label with the brain tumor bundle:"
+Write-Host "  powershell -ExecutionPolicy Bypass -File scripts\start_monai_server.ps1 -StudiesPath sample_data\synthetic_brain_mri\imagesTr -UseBrainTumorBundle"
