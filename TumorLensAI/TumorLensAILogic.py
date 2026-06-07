@@ -64,12 +64,12 @@ class TumorLensAILogic:
             if not slicer.util.saveNode(volumeNode, str(exported_volume)):
                 raise RuntimeError("Failed to export selected volume before MONAI Label inference.")
 
-            response = self.monai_client.run_inference_file(modelName, exported_volume)
+            response = self.monai_client.run_inference_file(modelName, exported_volume, output_dir=tmpdir)
             labelmap_path = self._labelmap_path_from_response(response)
             if not labelmap_path:
                 raise RuntimeError(
                     "MONAI Label inference did not return a labelmap path. "
-                    "Use simulateSegmentation for a no-server demo or adapt the client to the deployed MONAI app response."
+                    "Use simulateSegmentation for a no-server demo or check the deployed MONAI app response shape."
                 )
 
             return self._load_labelmap_as_segmentation(labelmap_path, volumeNode, modelName)
@@ -90,6 +90,8 @@ class TumorLensAILogic:
 
         image_data = labelmap_node.GetImageData()
         dims = image_data.GetDimensions()
+        image_data.AllocateScalars(vtk.VTK_UNSIGNED_CHAR, 1)
+        image_data.GetPointData().GetScalars().Fill(0)
         center = [dimension / 2.0 for dimension in dims]
         radii = [max(dimension / 8.0, 2.0) for dimension in dims]
 
@@ -103,6 +105,8 @@ class TumorLensAILogic:
                     )
                     if normalized <= 1.0:
                         image_data.SetScalarComponentFromDouble(x, y, z, 0, 1)
+        image_data.Modified()
+        labelmap_node.Modified()
 
         segmentations_logic = slicer.modules.segmentations.logic()
         segmentations_logic.ImportLabelmapToSegmentationNode(labelmap_node, segmentation_node)
@@ -205,4 +209,3 @@ class TumorLensAILogic:
         except ImportError as exc:
             raise RuntimeError("This workflow requires running inside 3D Slicer.") from exc
         return slicer
-

@@ -55,6 +55,11 @@ function Register-LocalBundle {
 
 if ($UseBrainTumorBundle) {
     $BrainTumorBundleName = "brats_mri_segmentation"
+    & $MonaiPython scripts\validate_brats_study.py --studies $StudiesPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "BraTS study validation failed."
+    }
+
     Register-LocalBundle `
         -BundleName $BrainTumorBundleName `
         -SourcePath "monai_app\bundles\$BrainTumorBundleName" `

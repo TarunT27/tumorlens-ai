@@ -28,9 +28,9 @@ powershell -ExecutionPolicy Bypass -File scripts\find_slicer.ps1
 
 Write-Host ""
 Write-Host "Checking MONAI server configuration with synthetic study and BraTS bundle..."
-$SyntheticStudy = "sample_data\synthetic_brain_mri\imagesTr"
+$SyntheticStudy = "sample_data\synthetic_brats_mri\imagesTr"
 if (-not (Test-Path $SyntheticStudy)) {
-    powershell -ExecutionPolicy Bypass -File scripts\create_synthetic_study.ps1
+    powershell -ExecutionPolicy Bypass -File scripts\create_synthetic_brats_study.ps1
 }
 powershell -ExecutionPolicy Bypass -File scripts\start_monai_server.ps1 `
     -StudiesPath $SyntheticStudy `

@@ -46,11 +46,19 @@ This bundle is a 3D BraTS MRI segmentation model for aligned T1c, T1, T2, and FL
 --conf models deepedit --conf bundles brats_mri_segmentation
 ```
 
-Use the synthetic study for server/connectivity checks only. Meaningful BraTS inference requires a compatible public BraTS-style study where each image provides the expected four MRI channels: T1c, T1, T2, and FLAIR.
+Use `scripts/create_synthetic_brats_study.ps1` for server/connectivity checks only. It creates a small channel-first 4-channel NIfTI with shape `(4, X, Y, Z)` and channel order T1c, T1, T2, and FLAIR. Meaningful BraTS inference requires a compatible public BraTS-style study with the same four-channel input contract.
+
+With the server running, verify live model inference:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/test_monai_inference.ps1
+```
+
+The smoke test calls `/infer/brats_mri_segmentation?image=synthetic_brats_001` and saves the returned labelmap under `reports/monai_smoke`.
 
 ## Notes
 
 - Keep private patient data out of this portfolio project.
 - GPU support is recommended for real inference.
-- The current Slicer client wrapper targets common MONAI Label REST patterns and may need endpoint adaptation for a custom MONAI app.
+- The current Slicer client wrapper handles JSON responses and MONAI multipart responses that include a binary labelmap/image part.
 - No external API key is required. MONAI Label runs locally.

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from email.parser import BytesParser
+from email.policy import default as email_policy
 import json
 from pathlib import Path
+import tempfile
 from typing import Any, Callable
-from urllib import error, request
+from urllib import error, parse, request
 from uuid import uuid4
 
 
@@ -27,9 +30,16 @@ class ServerStatus:
 class TumorLensAIMONAIClient:
     """Small, testable client for a separately running MONAI Label server."""
 
-    def __init__(self, base_url: str = "http://127.0.0.1:8000", timeout: float = 10.0, transport: Transport | None = None):
+    def __init__(
+        self,
+        base_url: str = "http://127.0.0.1:8000",
+        timeout: float = 10.0,
+        inference_timeout: float = 300.0,
+        transport: Transport | None = None,
+    ):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.inference_timeout = inference_timeout
         self._transport = transport or self._urllib_transport
 
     def check_status(self) -> ServerStatus:
@@ -70,12 +80,18 @@ class TumorLensAIMONAIClient:
             return self._extract_models(info_payload)
         return []
 
-    def run_inference_file(self, model_name: str, image_path: str | Path) -> dict[str, Any]:
+    def run_inference_file(
+        self,
+        model_name: str,
+        image_path: str | Path,
+        output_dir: str | Path | None = None,
+    ) -> dict[str, Any]:
         """Run model inference by posting an image file.
 
         MONAI Label deployments vary in how they expose file uploads, so this
         method targets the common `/infer/{model}` shape and returns the raw
-        response for the Slicer logic to interpret.
+        response for the Slicer logic to interpret. Multipart MONAI responses
+        are materialized to local files and exposed as `labelmap`.
         """
 
         image_path = Path(image_path)
@@ -89,11 +105,34 @@ class TumorLensAIMONAIClient:
             url,
             {"Content-Type": content_type},
             body,
-            self.timeout,
+            self.inference_timeout,
         )
         if status_code >= 400:
             raise RuntimeError(f"MONAI Label inference failed with HTTP {status_code}.")
-        return payload if isinstance(payload, dict) else {"response": payload}
+        response_payload = payload if isinstance(payload, dict) else {"response": payload}
+        return self._materialize_inference_response(response_payload, output_dir)
+
+    def run_inference_image_id(
+        self,
+        model_name: str,
+        image_id: str,
+        output_dir: str | Path | None = None,
+    ) -> dict[str, Any]:
+        """Run inference for an image already registered in the MONAI datastore."""
+
+        query = parse.urlencode({"image": image_id})
+        url = f"{self.base_url}/infer/{model_name}?{query}"
+        status_code, payload = self._transport(
+            "POST",
+            url,
+            {},
+            None,
+            self.inference_timeout,
+        )
+        if status_code >= 400:
+            raise RuntimeError(f"MONAI Label inference failed with HTTP {status_code}.")
+        response_payload = payload if isinstance(payload, dict) else {"response": payload}
+        return self._materialize_inference_response(response_payload, output_dir)
 
     def _json_request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> tuple[int, Any]:
         body = json.dumps(payload).encode("utf-8") if payload is not None else None
@@ -111,11 +150,13 @@ class TumorLensAIMONAIClient:
         req = request.Request(url, data=body, headers=headers, method=method)
         try:
             with request.urlopen(req, timeout=timeout) as response:  # noqa: S310 - user-provided local MONAI endpoint.
-                raw = response.read().decode("utf-8")
-                return response.status, json.loads(raw) if raw else {}
+                raw = response.read()
+                content_type = response.headers.get("Content-Type", "")
+                return response.status, self._parse_response_body(raw, content_type)
         except error.HTTPError as exc:
-            raw = exc.read().decode("utf-8")
-            payload = json.loads(raw) if raw else {}
+            raw = exc.read()
+            content_type = exc.headers.get("Content-Type", "") if exc.headers else ""
+            payload = self._parse_response_body(raw, content_type)
             return exc.code, payload
 
     def _extract_models(self, payload: Any) -> list[str]:
@@ -149,3 +190,85 @@ class TumorLensAIMONAIClient:
         ).encode("utf-8")
         footer = f"\r\n--{boundary}--\r\n".encode("utf-8")
         return header + file_bytes + footer, content_type
+
+    def _parse_response_body(self, raw: bytes, content_type: str) -> Any:
+        if not raw:
+            return {}
+
+        if "multipart/" in content_type.lower():
+            mime_bytes = (
+                f"Content-Type: {content_type}\r\n"
+                "MIME-Version: 1.0\r\n\r\n"
+            ).encode("utf-8") + raw
+            message = BytesParser(policy=email_policy).parsebytes(mime_bytes)
+            parts: list[dict[str, Any]] = []
+
+            for part in message.iter_parts():
+                name = part.get_param("name", header="content-disposition")
+                filename = part.get_filename()
+                part_content_type = part.get_content_type()
+                payload = part.get_payload(decode=True) or b""
+                part_record: dict[str, Any] = {
+                    "name": name,
+                    "filename": filename,
+                    "contentType": part_content_type,
+                }
+
+                if part_content_type == "application/json" or name == "params":
+                    text_payload = payload.decode("utf-8", errors="replace")
+                    try:
+                        part_record["json"] = json.loads(text_payload)
+                    except json.JSONDecodeError:
+                        part_record["text"] = text_payload
+                else:
+                    part_record["data"] = payload
+
+                parts.append(part_record)
+
+            payload: dict[str, Any] = {"contentType": content_type, "parts": parts}
+            for part in parts:
+                if part.get("name") == "params" and isinstance(part.get("json"), dict):
+                    payload.update(part["json"])
+            return payload
+
+        text = raw.decode("utf-8", errors="replace")
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            return text
+
+    def _materialize_inference_response(self, payload: dict[str, Any], output_dir: str | Path | None = None) -> dict[str, Any]:
+        parts = payload.get("parts")
+        if not isinstance(parts, list):
+            return payload
+
+        output_root = Path(output_dir) if output_dir else Path(tempfile.mkdtemp(prefix="tumorlensai_monai_"))
+        output_root.mkdir(parents=True, exist_ok=True)
+        saved_files: list[str] = []
+
+        for part in parts:
+            if not isinstance(part, dict):
+                continue
+            data = part.get("data")
+            if not isinstance(data, (bytes, bytearray)):
+                continue
+
+            name = str(part.get("name") or "result")
+            filename = part.get("filename")
+            suffix = "".join(Path(str(filename)).suffixes) if filename else ".nii.gz"
+            if not suffix:
+                suffix = ".nii.gz"
+
+            target = output_root / str(filename) if filename else output_root / f"{name}_{uuid4().hex}{suffix}"
+            target.write_bytes(bytes(data))
+            part["path"] = str(target)
+            saved_files.append(str(target))
+
+            if name in {"image", "label", "labelmap", "result"} and "labelmap" not in payload:
+                payload["labelmap"] = str(target)
+
+        if saved_files and "labelmap" not in payload:
+            payload["labelmap"] = saved_files[0]
+        if saved_files:
+            payload["savedFiles"] = saved_files
+        return payload

@@ -47,6 +47,7 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
     slicer_candidates = find_slicer(repo_root)
     synthetic_study = repo_root / "sample_data" / "synthetic_brain_mri" / "imagesTr"
+    synthetic_brats_study = repo_root / "sample_data" / "synthetic_brats_mri" / "imagesTr"
     msd_study = repo_root / "sample_data" / "Task01_BrainTumour" / "imagesTr"
 
     print("TumorLens AI environment check")
@@ -62,6 +63,7 @@ def main() -> int:
     print(f"MONAI Label Python package: {'found' if monailabel_import else 'not found'}")
     print(f"MONAI radiology app: {'found' if (repo_root / 'monai_app' / 'radiology').exists() else 'not found'}")
     print(f"Synthetic study path: {'found' if synthetic_study.exists() else 'not found'}")
+    print(f"Synthetic BraTS study path: {'found' if synthetic_brats_study.exists() else 'not found'}")
     print(f"MSD brain tumor study path: {'found' if msd_study.exists() else 'not found'}")
 
     if sys.version_info >= (3, 13):

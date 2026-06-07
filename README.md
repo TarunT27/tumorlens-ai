@@ -40,14 +40,13 @@ This project is not a medical device and does not provide diagnosis, treatment a
 
 ```text
 TumorLensAI/
-  TumorLensAI/
-    TumorLensAI.py
-    TumorLensAILogic.py
-    TumorLensAIMetrics.py
-    TumorLensAIMONAIClient.py
-    Resources/
-      UI/
-      Icons/
+  TumorLensAI.py
+  TumorLensAILogic.py
+  TumorLensAIMetrics.py
+  TumorLensAIMONAIClient.py
+  Resources/
+    UI/
+    Icons/
   monai_app/
     README.md
     config/
@@ -72,7 +71,7 @@ powershell -ExecutionPolicy Bypass -File scripts/find_slicer.ps1
 powershell -ExecutionPolicy Bypass -File scripts/launch_slicer.ps1
 ```
 
-The launch script opens 3D Slicer with this extension's module folder added. You can also add `TumorLensAI/TumorLensAI` manually from `Edit > Application Settings > Modules`.
+The launch script opens 3D Slicer with this extension's module folder added. You can also add `TumorLensAI` manually from `Edit > Application Settings > Modules`.
 
 ## Web Demo Prototype
 
@@ -99,11 +98,19 @@ Example server startup:
 powershell -ExecutionPolicy Bypass -File scripts/setup_monai.ps1
 powershell -ExecutionPolicy Bypass -File scripts/download_monai_radiology_app.ps1
 powershell -ExecutionPolicy Bypass -File scripts/download_monai_brats_bundle.ps1
-powershell -ExecutionPolicy Bypass -File scripts/create_synthetic_study.ps1
-powershell -ExecutionPolicy Bypass -File scripts/start_monai_server.ps1 -StudiesPath sample_data/synthetic_brain_mri/imagesTr -UseBrainTumorBundle
+powershell -ExecutionPolicy Bypass -File scripts/create_synthetic_brats_study.ps1
+powershell -ExecutionPolicy Bypass -File scripts/start_monai_server.ps1 -StudiesPath sample_data/synthetic_brats_mri/imagesTr -UseBrainTumorBundle
 ```
 
 The `-UseBrainTumorBundle` flag stages the downloaded `MONAI/brats_mri_segmentation` bundle into the local MONAI Label radiology app and exposes the `brats_mri_segmentation` model through `/info`.
+
+With the server running, verify a real inference round-trip:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/test_monai_inference.ps1
+```
+
+The smoke test runs `brats_mri_segmentation` on `synthetic_brats_001`, saves the returned labelmap under `reports/monai_smoke`, and prints model labels plus latency. CPU-only inference can take about a minute.
 
 See `monai_app/README.md` for more setup notes.
 
@@ -124,8 +131,8 @@ exportReport(report, outputPath) -> None
 
 The recommended starter dataset is the public Medical Segmentation Decathlon `Task01_BrainTumour` dataset or another BraTS-style public MRI dataset. Do not use private patient data for demos.
 
-For local setup checks, use the generated synthetic study:
+For local setup checks, use the generated 4-channel synthetic BraTS-style study:
 
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/create_synthetic_study.ps1
+powershell -ExecutionPolicy Bypass -File scripts/create_synthetic_brats_study.ps1
 ```
