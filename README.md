@@ -4,6 +4,22 @@ TumorLens AI is a starter 3D Slicer extension for research and education workflo
 
 This project is not a medical device and does not provide diagnosis, treatment advice, or clinical decision support.
 
+## Screenshots
+
+### Web Demo Interface
+
+<img src="public/assets/tumorlens/screenshots/web-demo-desktop.png" alt="TumorLens AI web demo showing MRI slices, 3D tumor surface, workflow steps, MONAI connection status, and measurement cards" width="100%">
+
+### Responsive View
+
+<img src="public/assets/tumorlens/screenshots/web-demo-mobile.png" alt="TumorLens AI responsive web demo layout" width="360">
+
+### Imaging And 3D Output Visuals
+
+| MRI review canvas | 3D tumor surface | Combined workflow concept |
+| --- | --- | --- |
+| <img src="public/assets/tumorlens/mri-axial.png" alt="Axial brain MRI with tumor segmentation overlay" width="260"> | <img src="public/assets/tumorlens/model-3d.png" alt="3D brain and tumor surface rendering" width="260"> | <img src="public/assets/tumorlens/combined-concept.png" alt="TumorLens AI combined MRI and 3D segmentation concept" width="260"> |
+
 ## What It Does
 
 - Loads MRI volumes into 3D Slicer.
