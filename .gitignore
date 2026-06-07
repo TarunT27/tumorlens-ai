@@ -23,6 +23,7 @@ qa/*.png
 datasets/
 sample_data/Task01_BrainTumour/
 sample_data/BraTS*/
+sample_data/synthetic_brain_mri/
 monai_app/apps/
 monai_app/radiology/
 monai_app/bundles/

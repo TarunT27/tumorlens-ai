@@ -1,2 +1,4 @@
-monailabel
+monailabel==0.8.5
+dicomweb-client[gcp]==0.59.1
 huggingface_hub[hf_xet]>=1.17.0
+pydicom<3

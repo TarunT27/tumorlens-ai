@@ -185,48 +185,48 @@ class TumorLensAIWidget(ScriptedLoadableModuleWidget):
     def _applyStyle(self):
         style = """
             #TumorLensPanel {
-              background-color: #101f27;
-              border: 1px solid rgba(120, 210, 222, 0.32);
-              border-radius: 8px;
+              background-color: #14181e;
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              border-radius: 14px;
             }
             #TumorLensHeader {
-              color: #e7f4f6;
+              color: #f5f5f7;
               font-size: 18px;
               font-weight: 700;
             }
             #TumorLensSubheader, #TumorLensStatus, #TumorLensDisclaimer {
-              color: #9ab8c0;
+              color: #a8b0ba;
               font-size: 12px;
             }
             #TumorLensPanelTitle {
-              color: #dff6f8;
+              color: #f5f5f7;
               font-size: 14px;
               font-weight: 700;
             }
             #TumorLensMetric {
-              color: #e7f4f6;
+              color: #f5f5f7;
               font-weight: 700;
             }
             QPushButton {
-              border-radius: 6px;
+              border-radius: 10px;
               min-height: 30px;
               padding-left: 12px;
               padding-right: 12px;
             }
             QPushButton[variant="primary"] {
-              background-color: #18bfd0;
-              color: #021014;
+              background-color: #64d2ff;
+              color: #050608;
               font-weight: 700;
             }
             QPushButton[variant="secondary"] {
-              background-color: rgba(20, 184, 166, 0.18);
-              border: 1px solid rgba(20, 184, 166, 0.42);
-              color: #dff6f8;
+              background-color: rgba(48, 209, 88, 0.14);
+              border: 1px solid rgba(48, 209, 88, 0.34);
+              color: #d8ffe2;
             }
             QPushButton[variant="ghost"] {
-              background-color: rgba(231, 244, 246, 0.05);
-              border: 1px solid rgba(154, 207, 215, 0.24);
-              color: #dff6f8;
+              background-color: rgba(255, 255, 255, 0.06);
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              color: #f5f5f7;
             }
             """
         parent = self.parent() if callable(getattr(self, "parent", None)) else getattr(self, "parent", None)
