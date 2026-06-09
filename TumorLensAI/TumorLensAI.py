@@ -257,7 +257,7 @@ class TumorLensAIWidget(ScriptedLoadableModuleWidget):
         labelWidget = qt.QLabel(label)
         labelWidget.setObjectName("TumorLensSubheader")
         row.addWidget(labelWidget)
-        if isinstance(control, qt.QLayout):
+        if hasattr(control, "addWidget"):
             row.addLayout(control)
         else:
             row.addWidget(control)
